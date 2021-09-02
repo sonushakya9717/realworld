@@ -15,7 +15,7 @@ module.exports = {
       authorid: {
         type: Sequelize.INTEGER,
         references:{
-          model:"profiles",
+          model:"users",
           key:"id"
       }
       },

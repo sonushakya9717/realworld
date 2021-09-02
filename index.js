@@ -12,8 +12,10 @@ app.use(session({
 }));
 
 const user = require("./routes/user");
-
+const profile = require("./routes/profile");
 app.use("/", user);
+
+app.use("/profiles",profile);
 
 
 app.use((err, req, res, next) => {

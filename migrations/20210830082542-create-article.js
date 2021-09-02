@@ -34,11 +34,10 @@ module.exports = {
         defaultValue:false
       },
       authorid: {
-        type: Sequelize.INTEGER,
         allowNull: false,
         type: Sequelize.INTEGER,
         references:{
-          model:"profiles",
+          model:"users",
           key:"id"
       }
       },

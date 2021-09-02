@@ -4,7 +4,6 @@ const app = express();
 app.set("db", require("../models"));
 const db = app.get("db");
 const jwt = require("jsonwebtoken");
-const { user } = require("../validation/users/signupUser.schema");
 
 const getSignedJwtToken = function (
   payload,
@@ -30,6 +29,15 @@ const createUser = async (req, res, next) => {
     });
   }
 
+  user = await db.user.findOne({ where: { userName } });
+
+  if (user) {
+    return next({
+      status: 400,
+      errors: "this username is already in use",
+    });
+  }
+
   const salt = await bcrypt.genSalt(10);
 
   hashPassword = await bcrypt.hash(password, salt);
@@ -47,6 +55,7 @@ const createUser = async (req, res, next) => {
   const payload = {
     user: {
       id: user.dataValues.id,
+      userName:user.dataValues.userName
     },
   };
   const token = getSignedJwtToken(payload);
@@ -73,6 +82,7 @@ const login = async (req, res, next) => {
   const payload = {
     user: {
       id: user.dataValues.id,
+      userName:user.dataValues.userName
     },
   };
 
@@ -89,32 +99,44 @@ const currerntUser = async (req, res, next) => {
     const token = req.header("x-auth-token");
     const { userName, email, bio, image } = user;
     return res.status(200).json({
-        userName,email,bio,image,token
+      userName,
+      email,
+      bio,
+      image,
+      token,
     });
   }
 
   next({ status: 400, errors: "server error" });
 };
 
-
-
 // update the current user //
 
 const updateCurrerntUser = async (req, res, next) => {
-    const { userName, email, bio, image } = req.body;
-    
-    const user = await db.user.update({
+  const { userName, bio, image } = req.body;
+
+  let user = await db.user.findOne({ where: { userName } });
+
+  if (user) {
+    return next({
+      status: 400,
+      errors: "this username is already in use",
+    });
+  }
+
+  user = await db.user.update(
+    {
       userName,
-      email,
       bio,
       image,
-    },{where:{id:req.user.id}});
+    },
+    { where: { id: req.user.id } }
+  );
 
-    console.log(user)
-    const token = req.header("x-auth-token");
+  console.log(user);
+  const token = req.header("x-auth-token");
 
-    return res.status(200).json({ ...user.dataValues, token });
-  };
+  return res.status(200).json({ ...user.dataValues, token });
+};
 
-
-module.exports = { createUser, login, currerntUser , updateCurrerntUser};
+module.exports = { createUser, login, currerntUser, updateCurrerntUser };
